@@ -11,8 +11,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
-      TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN || secrets.TELEGRAM_BOT_TOKEN || '8813542172:AAFNmjSOlWvKkQB8c4FaIgw_57h34-dwCas' }}
-      TELEGRAM_TO: ${{ secrets.TELEGRAM_TO || secrets.TELEGRAM_CHAT_ID || '-1004474033865' }}
+      TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN || secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_TO: ${{ secrets.TELEGRAM_TO || secrets.TELEGRAM_CHAT_ID }}
 
     steps:
       - name: Checkout
@@ -65,16 +65,22 @@ jobs:
           path: ${{ env.APK_PATH }}
           retention-days: 14
 
-      - name: Sanitize Telegram Credentials
+      - name: Check Telegram Credentials
         run: |
-          CLEAN_TOKEN=$(echo -n "${TELEGRAM_TOKEN}" | tr -d '\r\n ')
-          CLEAN_TO=$(echo -n "${TELEGRAM_TO}" | tr -d '\r\n ')
+          CLEAN_TOKEN=$(printf '%s' "${TELEGRAM_TOKEN}" | tr -d '\r\n ')
+          CLEAN_TO=$(printf '%s' "${TELEGRAM_TO}" | tr -d '\r\n ')
           echo "TG_TOKEN=${CLEAN_TOKEN}" >> "$GITHUB_ENV"
           echo "TG_TO=${CLEAN_TO}" >> "$GITHUB_ENV"
+          if [ -z "$CLEAN_TOKEN" ] || [ -z "$CLEAN_TO" ]; then
+            echo "TG_CONFIGURED=false" >> "$GITHUB_ENV"
+            echo "::warning::Telegram secrets are not configured; skipping upload."
+          else
+            echo "TG_CONFIGURED=true" >> "$GITHUB_ENV"
+          fi
 
       - name: Send APK to Telegram Channel
         id: send_apk
-        if: ${{ env.DIRECT_TG_UPLOAD == 'true' }}
+        if: ${{ env.DIRECT_TG_UPLOAD == 'true' && env.TG_CONFIGURED == 'true' }}
         run: |
           echo "Dispatching release APK to Telegram channel ${TG_TO}..."
           CAPTION=$(printf "🚀 *New Notify Shubbyy Release APK Ready!*\n\n*Repository:* %s\n*Branch:* %s\n*Commit:* %s\n*Pushed By:* %s\n\n📱 Tap the attached Release APK file below to install directly on your phone!" "${{ github.repository }}" "${{ github.ref_name }}" "${{ github.sha }}" "${{ github.actor }}")
@@ -95,7 +101,7 @@ jobs:
           fi
 
       - name: Send Fallback Message to Telegram (if direct upload failed or file was too large)
-        if: ${{ env.DIRECT_TG_UPLOAD != 'true' || env.UPLOAD_SUCCESS != 'true' }}
+        if: ${{ env.TG_CONFIGURED == 'true' && (env.DIRECT_TG_UPLOAD != 'true' || env.UPLOAD_SUCCESS != 'true') }}
         run: |
           TEXT=$(printf "🚀 *New Notify Shubbyy Release APK Successful!*\n\n*Repository:* %s\n*Branch:* %s\n*Commit:* %s\n*Pushed By:* %s\n\n📦 [Download Release APK](https://github.com/%s/actions/runs/%s)" "${{ github.repository }}" "${{ github.ref_name }}" "${{ github.sha }}" "${{ github.actor }}" "${{ github.repository }}" "${{ github.run_id }}")
           

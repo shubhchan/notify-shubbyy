@@ -9,12 +9,24 @@
             android:height="108dp"
             android:viewportWidth="108"
             android:viewportHeight="108">
+
+            <!-- Pixel stars -->
+            <path
+                android:fillColor="@color/outline_strong"
+                android:pathData="M24,28h4v4h-4z M82,72h4v4h-4z M76,24h3v3h-3z" />
+
+            <!-- Pixel bell -->
             <path
                 android:fillColor="@color/primary"
-                android:pathData="M54,24c-13.25,0 -24,10.75 -24,24c0,16.5 -12,21 -12,21h72s-12,-4.5 -12,-21c0,-13.25 -10.75,-24 -24,-24z" />
+                android:pathData="M42,22h24v6h-24z M38,28h32v6h-32z M34,34h40v8h-40z M30,42h48v10h-48z M26,52h56v8h-56z M22,60h64v8h-64z M46,72h16v8h-16z" />
+
+            <!-- Accents -->
             <path
-                android:fillColor="@color/primary"
-                android:pathData="M54,80c3.31,0 6,-2.69 6,-6h-12c0,3.31 2.69,6 6,6z" />
+                android:fillColor="@color/accent_pink"
+                android:pathData="M70,26h6v6h-6z" />
+            <path
+                android:fillColor="@color/accent_yellow"
+                android:pathData="M32,30h4v4h-4z" />
         </vector>
     </foreground>
 </adaptive-icon>

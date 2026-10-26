@@ -1,11 +1,13 @@
 <resources>
     <string name="app_name">Notify Shubbyy</string>
-    <string name="service_name">MQTT Alert Listener</string>
-    <string name="status_connected">Connected &amp; Listening</string>
-    <string name="status_disconnected">Disconnected</string>
-    <string name="status_connecting">Connecting to Broker...</string>
-    <string name="channel_name_service">Active Listener Status</string>
-    <string name="channel_desc_service">Keeps the persistent low-power socket open</string>
+    <string name="service_name">Arcade Alert Listener</string>
+    <string name="status_connected">SIGNAL ONLINE</string>
+    <string name="status_disconnected">OFFLINE</string>
+    <string name="status_connecting">LINKING TO BROKER...</string>
+    <string name="channel_name_service">Active Listener</string>
+    <string name="channel_desc_service">Keeps the low-power MQTT socket open</string>
     <string name="channel_name_alerts">Trigger Alerts</string>
-    <string name="channel_desc_alerts">High priority sound and vibration alerts from web triggers</string>
+    <string name="channel_desc_alerts">High-priority arcade alarms fired from the web trigger</string>
+    <string name="notification_title_service">NOTIFY SHUBBYY // ACTIVE</string>
+    <string name="notification_title_alert">SIGNAL INCOMING</string>
 </resources>

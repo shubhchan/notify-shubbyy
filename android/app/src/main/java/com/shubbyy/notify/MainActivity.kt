@@ -7,22 +7,18 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
-import android.graphics.Color
-import android.media.AudioManager
-import android.media.ToneGenerator
+import android.content.res.ColorStateList
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.PowerManager
-import android.os.VibrationEffect
-import android.os.Vibrator
-import android.os.VibratorManager
 import android.provider.Settings
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import com.shubbyy.notify.databinding.ActivityMainBinding
+import org.json.JSONObject
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -35,12 +31,18 @@ class MainActivity : AppCompatActivity() {
         getSharedPreferences(MqttForegroundService.PREFS_NAME, Context.MODE_PRIVATE)
     }
 
+    private val logLines = mutableListOf<String>()
+
+    private var signalCount = 0
+
     private val notificationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         if (isGranted) {
-            Toast.makeText(this, "Notification permission active", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "NOTIFICATIONS ENABLED", Toast.LENGTH_SHORT).show()
             updatePermissionButtonsState()
+        } else {
+            Toast.makeText(this, "NOTIFICATIONS BLOCKED", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -51,12 +53,28 @@ class MainActivity : AppCompatActivity() {
                     val status = intent.getStringExtra(MqttForegroundService.EXTRA_STATUS) ?: "Unknown"
                     updateStatusDisplay(status)
                 }
+
                 MqttForegroundService.BROADCAST_EVENT_ARRIVED -> {
                     val payload = intent.getStringExtra(MqttForegroundService.EXTRA_PAYLOAD) ?: ""
-                    val timestamp = intent.getLongExtra(MqttForegroundService.EXTRA_TIMESTAMP, System.currentTimeMillis())
-                    val timeStr = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date(timestamp))
-                    val logEntry = "[$timeStr] TRIGGER ARRIVED\n"
-                    binding.tvEventLog.append(logEntry)
+                    val timestamp = intent.getLongExtra(
+                        MqttForegroundService.EXTRA_TIMESTAMP,
+                        System.currentTimeMillis()
+                    )
+
+                    val timeStr = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
+                        .format(Date(timestamp))
+                    val alertType = parseAlertType(payload)
+
+                    signalCount += 1
+                    prefs.edit()
+                        .putInt(PREF_KEY_SIGNAL_COUNT, signalCount)
+                        .putString(PREF_KEY_LAST_ACK, timeStr)
+                        .apply()
+
+                    binding.tvSignalCount.text = signalCount.toString()
+                    binding.tvLastAck.text = timeStr
+
+                    appendLog("[$timeStr] ACK · $alertType TRIGGER ARRIVED")
                 }
             }
         }
@@ -68,6 +86,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         NotificationHelper.createNotificationChannels(this)
+        restoreStats()
         setupViews()
         loadPreferences()
         updatePermissionButtonsState()
@@ -92,11 +111,12 @@ class MainActivity : AppCompatActivity() {
         super.onPause()
         try {
             unregisterReceiver(serviceUpdateReceiver)
-        } catch (e: Exception) {}
+        } catch (e: Exception) {
+            // Receiver was not registered; safe to ignore.
+        }
     }
 
     private fun setupViews() {
-        // Toggle Service switch
         binding.switchService.setOnCheckedChangeListener { _, isChecked ->
             prefs.edit().putBoolean(MqttForegroundService.PREF_KEY_ENABLED, isChecked).apply()
             if (isChecked) {
@@ -106,29 +126,27 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        // Battery optimization exemption button
-        binding.btnBatteryOpt.setOnClickListener {
-            requestBatteryOptimizationExemption()
-        }
+        binding.btnBatteryOpt.setOnClickListener { requestBatteryOptimizationExemption() }
+        binding.btnNotificationPerm.setOnClickListener { requestNotificationPermission() }
+        binding.btnTestBeep.setOnClickListener { testHardwareBeep() }
+        binding.btnTestSiren.setOnClickListener { testHardwareSiren() }
+        binding.btnTestVibrate.setOnClickListener { testHardwareVibration() }
 
-        // Notification permission button
-        binding.btnNotificationPerm.setOnClickListener {
-            requestNotificationPermission()
-        }
-
-        // Test Hardware Beep & Siren
-        binding.btnTestBeep.setOnClickListener {
-            testHardwareBeep()
-        }
-
-        binding.btnTestSiren.setOnClickListener {
-            testHardwareSiren()
-        }
-
-        // Clear log
         binding.btnClearLog.setOnClickListener {
-            binding.tvEventLog.text = "[Ready] Logs cleared.\n"
+            logLines.clear()
+            appendLog("[READY] LOG CLEARED. AWAITING SIGNALS...")
+            Toast.makeText(this, "LOG CLEARED", Toast.LENGTH_SHORT).show()
         }
+    }
+
+    private fun restoreStats() {
+        signalCount = prefs.getInt(PREF_KEY_SIGNAL_COUNT, 0)
+        binding.tvSignalCount.text = signalCount.toString()
+        binding.tvLastAck.text = prefs.getString(PREF_KEY_LAST_ACK, "--") ?: "--"
+
+        logLines.add("[BOOT] PIXEL SIGNAL OS v1.0")
+        logLines.add("[BOOT] AWAITING SIGNALS...")
+        renderLog()
     }
 
     private fun loadPreferences() {
@@ -164,28 +182,39 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun updateStatusDisplay(status: String) {
-        binding.tvLiveStatus.text = status
+        val connected = status.contains("Connected", ignoreCase = true) ||
+            status.contains("Listening", ignoreCase = true)
+        val connecting = status.contains("Connecting", ignoreCase = true) ||
+            status.contains("Starting", ignoreCase = true) ||
+            status.contains("Reconnect", ignoreCase = true) ||
+            status.contains("Broker", ignoreCase = true)
 
-        if (status.contains("Connected", ignoreCase = true) || status.contains("Listening", ignoreCase = true)) {
-            binding.viewStatusDot.setBackgroundColor(Color.parseColor("#4ADE80")) // M3 Success
-            binding.tvLiveStatus.setTextColor(Color.parseColor("#4ADE80"))
-        } else if (status.contains("Connecting", ignoreCase = true) || status.contains("Starting", ignoreCase = true)) {
-            binding.viewStatusDot.setBackgroundColor(Color.parseColor("#80D4FF")) // M3 Primary
-            binding.tvLiveStatus.setTextColor(Color.parseColor("#80D4FF"))
-        } else {
-            binding.viewStatusDot.setBackgroundColor(Color.parseColor("#FFB4AB")) // M3 Error
-            binding.tvLiveStatus.setTextColor(Color.parseColor("#FFB4AB"))
+        val display = when {
+            connected -> "ONLINE"
+            connecting && status.contains("Reconnect", ignoreCase = true) -> "RETRY"
+            connecting -> "LINKING"
+            else -> "OFFLINE"
         }
+        val color = when {
+            connected -> ContextCompat.getColor(this, R.color.success)
+            connecting -> ContextCompat.getColor(this, R.color.warning)
+            else -> ContextCompat.getColor(this, R.color.error)
+        }
+
+        binding.viewStatusDot.backgroundTintList = ColorStateList.valueOf(color)
+        binding.tvLiveStatus.setTextColor(color)
+        binding.tvLiveStatus.text = display
     }
 
     private fun updatePermissionButtonsState() {
         val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
         val isIgnoringBattery = powerManager.isIgnoringBatteryOptimizations(packageName)
+
         if (isIgnoringBattery) {
-            binding.btnBatteryOpt.text = "✅ Battery: Unrestricted"
+            binding.btnBatteryOpt.text = "BATTERY: UNRESTRICTED"
             binding.btnBatteryOpt.isEnabled = false
         } else {
-            binding.btnBatteryOpt.text = "🔋 Request Battery Exemption"
+            binding.btnBatteryOpt.text = "REQUEST BATTERY EXEMPTION"
             binding.btnBatteryOpt.isEnabled = true
         }
 
@@ -196,14 +225,14 @@ class MainActivity : AppCompatActivity() {
             ) == PackageManager.PERMISSION_GRANTED
 
             if (hasNotifPerm) {
-                binding.btnNotificationPerm.text = "✅ Notifications Active"
+                binding.btnNotificationPerm.text = "NOTIFICATIONS ACTIVE"
                 binding.btnNotificationPerm.isEnabled = false
             } else {
-                binding.btnNotificationPerm.text = "🔔 Enable Notifications"
+                binding.btnNotificationPerm.text = "ENABLE NOTIFICATIONS"
                 binding.btnNotificationPerm.isEnabled = true
             }
         } else {
-            binding.btnNotificationPerm.text = "✅ Notifications Active"
+            binding.btnNotificationPerm.text = "NOTIFICATIONS ACTIVE"
             binding.btnNotificationPerm.isEnabled = false
         }
     }
@@ -222,7 +251,7 @@ class MainActivity : AppCompatActivity() {
                 startActivity(intent)
             }
         } else {
-            Toast.makeText(this, "Already exempt from battery optimization", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "ALREADY EXEMPT FROM BATTERY OPTIMIZATION", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -233,22 +262,63 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun testHardwareBeep() {
-        Toast.makeText(this, "Playing Piercing Beep Tone...", Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, "BEEP FIRED", Toast.LENGTH_SHORT).show()
         try {
             AlertSoundPlayer.playAlert(this, "beep")
-            binding.tvEventLog.append("[Local Test] ⚡ Piercing Beep & Haptics Triggered\n")
+            appendLog("[LOCAL TEST] BEEP + HAPTICS FIRED")
         } catch (e: Exception) {
-            Toast.makeText(this, "Test error: ${e.message}", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "TEST ERROR: ${e.message}", Toast.LENGTH_SHORT).show()
         }
     }
 
     private fun testHardwareSiren() {
-        Toast.makeText(this, "Playing Loud Emergency Siren...", Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, "SIREN WAILING", Toast.LENGTH_SHORT).show()
         try {
             AlertSoundPlayer.playAlert(this, "urgent")
-            binding.tvEventLog.append("[Local Test] 🚨 Loud Emergency Siren Triggered\n")
+            appendLog("[LOCAL TEST] EMERGENCY SIREN FIRED")
         } catch (e: Exception) {
-            Toast.makeText(this, "Test error: ${e.message}", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "TEST ERROR: ${e.message}", Toast.LENGTH_SHORT).show()
         }
+    }
+
+    private fun testHardwareVibration() {
+        Toast.makeText(this, "HAPTICS FIRED", Toast.LENGTH_SHORT).show()
+        try {
+            AlertSoundPlayer.triggerVibration(this, "vibrate")
+            appendLog("[LOCAL TEST] VIBRATION HAPTICS FIRED")
+        } catch (e: Exception) {
+            Toast.makeText(this, "TEST ERROR: ${e.message}", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun parseAlertType(payload: String): String {
+        return try {
+            if (payload.startsWith("{")) {
+                JSONObject(payload).optString("type", "beep").uppercase(Locale.getDefault())
+            } else {
+                "BEEP"
+            }
+        } catch (e: Exception) {
+            "BEEP"
+        }
+    }
+
+    private fun appendLog(line: String) {
+        logLines.add(line)
+        while (logLines.size > MAX_LOG_LINES) {
+            logLines.removeAt(0)
+        }
+        renderLog()
+    }
+
+    private fun renderLog() {
+        binding.tvEventLog.text = logLines.joinToString("\n")
+        binding.tvEventLog.append("\n")
+    }
+
+    companion object {
+        private const val PREF_KEY_SIGNAL_COUNT = "pref_signal_count"
+        private const val PREF_KEY_LAST_ACK = "pref_last_ack"
+        private const val MAX_LOG_LINES = 9
     }
 }

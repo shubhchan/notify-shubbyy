@@ -116,7 +116,7 @@ class MqttForegroundService : Service() {
                     isConnected = true
                     val msg = if (reconnect) "Reconnected" else "Connected & Listening"
                     broadcastStatus(msg)
-                    updateNotification("Active (Listening)")
+                    updateNotification("SIGNAL ONLINE")
                     subscribeToTopic()
                 }
 
@@ -180,8 +180,8 @@ class MqttForegroundService : Service() {
 
         NotificationHelper.showHeadsUpAlertNotification(
             this,
-            "⚡ Web Page Triggered!",
-            "Alert: ${alertType.uppercase()} | Channel: $FIXED_TOPIC"
+            "SIGNAL INCOMING // WEB TRIGGER",
+            "${alertType.uppercase()} ALERT  |  $FIXED_TOPIC"
         )
 
         val intent = Intent(BROADCAST_EVENT_ARRIVED).apply {

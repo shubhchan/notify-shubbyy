@@ -4,46 +4,66 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background"
-    android:fillViewport="true">
+    android:background="@drawable/bg_screen"
+    android:fillViewport="true"
+    tools:context=".MainActivity">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="20dp">
+        android:paddingHorizontal="18dp"
+        android:paddingTop="18dp"
+        android:paddingBottom="28dp">
 
-        <!-- Top App Bar -->
+        <!-- ================================================================
+             Cabinet header
+             ================================================================ -->
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:layout_marginBottom="24dp">
+            android:layout_marginBottom="14dp">
 
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_centerVertical="true"
+                android:layout_toStartOf="@id/chipStatus"
                 android:orientation="vertical">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Notify Shubbyy"
-                    android:textColor="@color/text_primary"
-                    android:textSize="22sp"
+                    app:fontFamily="@font/press_start_2p"
+                    android:letterSpacing="0.14"
+                    android:text="NOTIFY"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="10sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="3dp"
+                    app:fontFamily="@font/press_start_2p"
+                    android:letterSpacing="0.05"
+                    android:text="SHUBBYY"
+                    android:textColor="@color/accent_pink"
+                    android:textSize="18sp"
                     android:textStyle="bold" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
-                    android:text="Material 3 Alert Receiver"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="12sp" />
+                    android:layout_marginTop="4dp"
+                    app:fontFamily="@font/vt323"
+                    android:letterSpacing="0.08"
+                    android:text="ARCADE RECEIVER // 1996"
+                    android:textColor="@color/text_muted"
+                    android:textSize="14sp" />
             </LinearLayout>
 
-            <!-- Status Chip -->
+            <!-- Status chip -->
             <LinearLayout
                 android:id="@+id/chipStatus"
                 android:layout_width="wrap_content"
@@ -52,38 +72,67 @@
                 android:layout_centerVertical="true"
                 android:background="@drawable/bg_pill"
                 android:gravity="center_vertical"
-                android:paddingHorizontal="12dp"
-                android:paddingVertical="6dp">
+                android:paddingHorizontal="10dp"
+                android:paddingVertical="8dp">
 
                 <View
                     android:id="@+id/viewStatusDot"
-                    android:layout_width="8dp"
-                    android:layout_height="8dp"
-                    android:background="@color/error" />
+                    android:layout_width="10dp"
+                    android:layout_height="10dp"
+                    android:background="@drawable/bg_status_dot" />
 
                 <TextView
                     android:id="@+id/tvLiveStatus"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
-                    android:text="Inactive"
+                    app:fontFamily="@font/vt323"
+                    android:letterSpacing="0.06"
+                    android:text="INACTIVE"
                     android:textColor="@color/error"
-                    android:textSize="12sp"
+                    android:textSize="15sp"
                     android:textStyle="bold" />
             </LinearLayout>
         </RelativeLayout>
 
-        <!-- Main Listener Switch Card -->
+        <!-- Attract marquee -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="14dp"
+            android:background="@drawable/bg_inset"
+            app:fontFamily="@font/vt323"
+            android:gravity="center"
+            android:letterSpacing="0.1"
+            android:paddingHorizontal="10dp"
+            android:paddingVertical="8dp"
+            android:text="&#9733; INSERT COIN - LISTENER STANDBY - ZERO SERVERS &#9733;"
+            android:textColor="@color/accent_yellow"
+            android:textSize="15sp" />
+
+        <!-- ================================================================
+             Player 1: listener state
+             ================================================================ -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@drawable/bg_card"
             android:orientation="vertical"
-            android:padding="20dp">
+            android:padding="16dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:fontFamily="@font/press_start_2p"
+                android:letterSpacing="0.08"
+                android:text="PLAYER 1 // LISTENER"
+                android:textColor="@color/text_muted"
+                android:textSize="10sp" />
 
             <RelativeLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp">
 
                 <LinearLayout
                     android:layout_width="wrap_content"
@@ -96,18 +145,20 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Background Listener"
-                        android:textColor="@color/text_primary"
-                        android:textSize="17sp"
-                        android:textStyle="bold" />
+                        app:fontFamily="@font/press_start_2p"
+                        android:letterSpacing="0.03"
+                        android:text="BACKGROUND LISTENER"
+                        android:textColor="@color/primary"
+                        android:textSize="10sp" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="2dp"
-                        android:text="Passive low-power TCP connection"
+                        android:layout_marginTop="5dp"
+                        app:fontFamily="@font/vt323"
+                        android:text="Passive low-power socket"
                         android:textColor="@color/text_secondary"
-                        android:textSize="13sp" />
+                        android:textSize="16sp" />
                 </LinearLayout>
 
                 <com.google.android.material.switchmaterial.SwitchMaterial
@@ -115,126 +166,208 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_alignParentEnd="true"
-                    android:layout_centerVertical="true" />
+                    android:layout_centerVertical="true"
+                    app:thumbTint="@color/switch_thumb"
+                    app:trackTint="@color/switch_track" />
             </RelativeLayout>
 
-            <!-- Locked Channel Badge -->
+            <!-- Locked channel -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:background="@drawable/bg_pill"
-                android:gravity="center"
-                android:paddingVertical="10dp"
-                android:paddingHorizontal="14dp">
+                android:background="@drawable/bg_inset"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingHorizontal="10dp"
+                android:paddingVertical="10dp">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="🔒 Locked Channel: "
-                    android:textColor="@color/text_secondary"
-                    android:textSize="12sp" />
+                    app:fontFamily="@font/press_start_2p"
+                    android:letterSpacing="0.06"
+                    android:text="CHANNEL"
+                    android:textColor="@color/text_muted"
+                    android:textSize="10sp" />
 
                 <TextView
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_marginStart="10dp"
+                    android:layout_weight="1"
+                    app:fontFamily="@font/vt323"
+                    android:letterSpacing="0.02"
                     android:text="shubbyy/notify/instant"
-                    android:textColor="@color/primary"
-                    android:textSize="12sp"
-                    android:textStyle="bold"
-                    android:fontFamily="monospace" />
+                    android:textColor="@color/secondary"
+                    android:textSize="16sp" />
             </LinearLayout>
 
-        </LinearLayout>
-
-        <!-- System Reliability & Permissions Card -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:background="@drawable/bg_card"
-            android:orientation="vertical"
-            android:padding="20dp">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Reliability Settings"
-                android:textColor="@color/text_primary"
-                android:textSize="16sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="2dp"
-                android:text="Ensure alerts wake your device immediately"
-                android:textColor="@color/text_secondary"
-                android:textSize="12sp" />
-
-            <!-- Battery Optimization Exemption -->
-            <Button
-                android:id="@+id/btnBatteryOpt"
-                style="@style/Widget.Material3.Button.TonalButton"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="14dp"
-                android:backgroundTint="@color/surface"
-                android:text="🔋 Request Battery Exemption"
-                android:textColor="@color/text_primary" />
-
-            <!-- Notification Permission (Android 13+) -->
-            <Button
-                android:id="@+id/btnNotificationPerm"
-                style="@style/Widget.Material3.Button.OutlinedButton"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:text="🔔 Notification Permission"
-                android:textColor="@color/text_primary" />
-
-            <!-- Test Hardware Beep -->
-            <!-- Test Alert Buttons (Beep & Siren) -->
+            <!-- Live counters -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
                 android:orientation="horizontal">
 
-                <Button
-                    android:id="@+id/btnTestBeep"
-                    style="@style/Widget.Material3.Button"
+                <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginEnd="6dp"
                     android:layout_weight="1"
-                    android:backgroundTint="@color/primary_container"
-                    android:text="⚡ Test Beep"
+                    android:background="@drawable/bg_inset"
+                    android:orientation="vertical"
+                    android:padding="10dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        app:fontFamily="@font/press_start_2p"
+                        android:letterSpacing="0.08"
+                        android:text="SIGNALS"
+                        android:textColor="@color/text_muted"
+                        android:textSize="10sp" />
+
+                    <TextView
+                        android:id="@+id/tvSignalCount"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        app:fontFamily="@font/vt323"
+                        android:text="0"
+                        android:textColor="@color/primary"
+                        android:textSize="28sp" />
+                </LinearLayout>
+
+                <Space
+                    android:layout_width="10dp"
+                    android:layout_height="1dp" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_inset"
+                    android:orientation="vertical"
+                    android:padding="10dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        app:fontFamily="@font/press_start_2p"
+                        android:letterSpacing="0.08"
+                        android:text="LAST ACK"
+                        android:textColor="@color/text_muted"
+                        android:textSize="10sp" />
+
+                    <TextView
+                        android:id="@+id/tvLastAck"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        app:fontFamily="@font/vt323"
+                        android:text="--"
+                        android:textColor="@color/secondary"
+                        android:textSize="28sp" />
+                </LinearLayout>
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- ================================================================
+             Reliability upgrades
+             ================================================================ -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:background="@drawable/bg_card"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:fontFamily="@font/press_start_2p"
+                android:letterSpacing="0.04"
+                android:text="RELIABILITY UPGRADES"
+                android:textColor="@color/text_primary"
+                android:textSize="10sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="5dp"
+                app:fontFamily="@font/vt323"
+                android:text="Keep the signal alive through Android Doze mode."
+                android:textColor="@color/text_secondary"
+                android:textSize="16sp" />
+
+            <Button
+                android:id="@+id/btnBatteryOpt"
+                style="@style/Widget.NotifyShubbyy.Button.Tonal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:text="REQUEST BATTERY EXEMPTION" />
+
+            <Button
+                android:id="@+id/btnNotificationPerm"
+                style="@style/Widget.NotifyShubbyy.Button.Outlined"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="ENABLE NOTIFICATIONS" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/btnTestBeep"
+                    style="@style/Widget.NotifyShubbyy.Button"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="5dp"
+                    android:layout_weight="1"
+                    android:text="TEST BEEP"
+                    app:backgroundTint="@color/primary_container"
+                    app:strokeColor="@color/primary"
                     android:textColor="@color/on_primary_container" />
 
                 <Button
                     android:id="@+id/btnTestSiren"
-                    style="@style/Widget.Material3.Button"
+                    style="@style/Widget.NotifyShubbyy.Button"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="6dp"
+                    android:layout_marginStart="5dp"
                     android:layout_weight="1"
-                    android:backgroundTint="@color/error_container"
-                    android:text="🚨 Test Siren"
+                    android:text="TEST SIREN"
+                    app:backgroundTint="@color/error_container"
+                    app:strokeColor="@color/error"
                     android:textColor="@color/on_error_container" />
             </LinearLayout>
 
+            <Button
+                android:id="@+id/btnTestVibrate"
+                style="@style/Widget.NotifyShubbyy.Button.Outlined"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="TEST VIBRATION" />
         </LinearLayout>
 
-        <!-- Compact Trigger Event Log -->
+        <!-- ================================================================
+             Transmission log
+             ================================================================ -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:layout_marginBottom="24dp"
+            android:layout_marginTop="14dp"
+            android:layout_marginBottom="6dp"
             android:background="@drawable/bg_card"
             android:orientation="vertical"
-            android:padding="20dp">
+            android:padding="16dp">
 
             <RelativeLayout
                 android:layout_width="match_parent"
@@ -243,19 +376,25 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Recent Alerts"
+                    android:layout_centerVertical="true"
+                    app:fontFamily="@font/press_start_2p"
+                    android:letterSpacing="0.04"
+                    android:text="TRANSMISSION LOG"
                     android:textColor="@color/text_primary"
-                    android:textSize="16sp"
-                    android:textStyle="bold" />
+                    android:textSize="10sp" />
 
                 <TextView
                     android:id="@+id/btnClearLog"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_alignParentEnd="true"
-                    android:text="Clear"
-                    android:textColor="@color/primary"
-                    android:textSize="12sp" />
+                    android:layout_centerVertical="true"
+                    app:fontFamily="@font/press_start_2p"
+                    android:letterSpacing="0.04"
+                    android:padding="6dp"
+                    android:text="CLEAR"
+                    android:textColor="@color/accent_yellow"
+                    android:textSize="10sp" />
             </RelativeLayout>
 
             <TextView
@@ -263,17 +402,28 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
-                android:background="@drawable/bg_card"
-                android:backgroundTint="@color/surface"
-                android:fontFamily="monospace"
-                android:minHeight="60dp"
+                android:background="@drawable/bg_inset"
+                app:fontFamily="@font/vt323"
+                android:lineSpacingExtra="3dp"
+                android:minHeight="100dp"
                 android:padding="12dp"
-                android:text="[Ready] Awaiting signals...\n"
+                android:text="[BOOT] AWAITING SIGNALS...&#10;"
                 android:textColor="@color/text_secondary"
-                android:textSize="11sp" />
+                android:textSize="16sp" />
 
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                app:fontFamily="@font/vt323"
+                android:gravity="center"
+                android:letterSpacing="0.08"
+                android:text="MQTT OVER SSL &#183; 60s KEEPALIVE &#183; ZERO SERVERS"
+                android:textColor="@color/text_muted"
+                android:textSize="13sp" />
         </LinearLayout>
 
     </LinearLayout>
 
 </androidx.core.widget.NestedScrollView>
+

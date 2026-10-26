@@ -3,95 +3,244 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Notify Shubbyy &bull; Instant Trigger</title>
-  <meta name="description" content="Ultra-sleek Material 3 instant notification trigger connecting directly to Android devices.">
+  <title>Notify Shubbyy &bull; Arcade Alert Transmitter</title>
+  <meta name="description" content="A 90s arcade-style instant notification transmitter that fires real alerts to your Android receiver over MQTT.">
+  <meta name="theme-color" content="#07030f">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Silkscreen:wght@400;700&family=VT323&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="design-system.css">
   <link rel="stylesheet" href="style.css">
-  <!-- Bundled local MQTT client with fallback -->
   <script src="mqtt.min.js"></script>
-  <script>
-    if (typeof mqtt === 'undefined') {
-      document.write('<script src="https://unpkg.com/mqtt@4.3.7/dist/mqtt.min.js"><\/script>');
-    }
-  </script>
 </head>
-<body>
-  <div class="m3-scaffold">
-    <!-- Top App Bar -->
-    <header class="m3-top-bar">
-      <div class="m3-brand">
-        <div class="m3-brand-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+<body class="crt">
+  <a class="skip-link" href="#triggerBtn">Skip to trigger</a>
+
+  <div class="crt-fx" aria-hidden="true"></div>
+  <div class="starfield" aria-hidden="true"></div>
+
+  <div class="cabinet">
+    <!-- Top marquee / app bar -->
+    <header class="cabinet__top">
+      <div class="brand">
+        <div class="brand__mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="square" stroke-linejoin="miter">
+            <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path>
+            <path d="M13.7 21a2 2 0 0 1-3.4 0"></path>
           </svg>
         </div>
-        <span class="m3-title">Notify <strong>Shubbyy</strong></span>
+        <div class="brand__copy">
+          <h1 class="brand__title">NOTIFY <span>SHUBBYY</span></h1>
+          <p class="brand__sub">Arcade Alert Transmitter // Est. 1996</p>
+        </div>
       </div>
 
-      <div class="m3-status-chip" id="connectionChip">
-        <span class="m3-status-dot"></span>
-        <span class="m3-status-label" id="connectionText">Connecting...</span>
+      <div class="header-actions">
+        <span class="px-chip" id="connectionChip" role="status" aria-live="polite">
+          <span class="led led--off" id="connectionLed"></span>
+          <span id="connectionText">LINKING</span>
+        </span>
+
+        <button class="px-btn px-btn--ghost px-btn--icon" id="soundToggle" type="button"
+                aria-pressed="true" aria-label="Toggle sound (M)" title="Sound on/off (M)">
+          <svg id="soundIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="square" stroke-linejoin="miter">
+            <path d="M11 5 6 9H3v6h3l5 4z"></path>
+            <path d="M15.5 8.5a5 5 0 0 1 0 7"></path>
+            <path d="M18.5 5.5a9 9 0 0 1 0 13"></path>
+          </svg>
+        </button>
+
+        <button class="px-btn px-btn--yellow px-btn--icon" id="helpBtn" type="button"
+                aria-haspopup="dialog" aria-controls="helpModal" aria-label="How to play" title="How to play">
+          <span class="help-glyph" aria-hidden="true">?</span>
+        </button>
       </div>
     </header>
 
-    <!-- Main Content Area -->
-    <main class="m3-main-card">
-      <!-- Central Hero Trigger Button -->
-      <div class="m3-trigger-container">
-        <div class="m3-trigger-aura" id="triggerAura"></div>
-        <button id="triggerBtn" class="m3-fab-trigger" aria-label="Trigger Phone Alert" disabled>
-          <div class="m3-fab-ripple"></div>
-          <div class="m3-fab-content">
-            <svg class="m3-fab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
-            </svg>
-            <span class="m3-fab-label">NOTIFY</span>
-            <span class="m3-fab-sublabel" id="triggerSubtext">CONNECTING</span>
+    <!-- Attract marquee -->
+    <div class="marquee" aria-hidden="true">
+      <div class="marquee__track">
+        <span>INSERT COIN</span><span class="marquee__star">★</span>
+        <span>PRESS FIRE TO TRANSMIT</span><span class="marquee__star">★</span>
+        <span>NO SERVERS</span><span class="marquee__star">★</span>
+        <span>INSTANT DELIVERY</span><span class="marquee__star">★</span>
+        <span>INSERT COIN</span><span class="marquee__star">★</span>
+        <span>PRESS FIRE TO TRANSMIT</span><span class="marquee__star">★</span>
+        <span>NO SERVERS</span><span class="marquee__star">★</span>
+        <span>INSTANT DELIVERY</span><span class="marquee__star">★</span>
+      </div>
+    </div>
+
+    <main class="cabinet__grid">
+      <!-- Player 1: trigger deck -->
+      <section class="stage px-panel px-panel--raised" aria-labelledby="stageTitle">
+        <h2 class="sr-only" id="stageTitle">Alert trigger</h2>
+
+        <div class="stage__scoreboard" aria-label="Live session stats">
+          <div class="stat">
+            <span class="stat__label">Signals</span>
+            <span class="stat__value" id="signalCountText">0</span>
           </div>
-        </button>
-      </div>
-
-      <!-- M3 Segmented Alert Mode Selector -->
-      <div class="m3-segmented-control" role="group" aria-label="Alert Mode Selection">
-        <button class="m3-segment active" data-type="beep" id="segBeep">
-          <span class="m3-segment-icon">⚡</span>
-          <span>Beep</span>
-        </button>
-        <button class="m3-segment" data-type="urgent" id="segUrgent">
-          <span class="m3-segment-icon">🚨</span>
-          <span>Siren</span>
-        </button>
-        <button class="m3-segment" data-type="vibrate" id="segVibrate">
-          <span class="m3-segment-icon">📳</span>
-          <span>Vibrate</span>
-        </button>
-      </div>
-
-      <!-- Minimal Information & Fixed Channel Card -->
-      <div class="m3-info-row">
-        <div class="m3-meta-pill" title="Locked Channel">
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5">
-            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-          </svg>
-          <span class="m3-pill-value">shubbyy/notify/instant</span>
+          <div class="stat">
+            <span class="stat__label">Last ACK</span>
+            <span class="stat__value" id="ackText">--</span>
+          </div>
+          <div class="stat">
+            <span class="stat__label">Mode</span>
+            <span class="stat__value stat__value--sm" id="modeText">BEEP</span>
+          </div>
         </div>
 
-        <div class="m3-meta-pill" title="Total Dispatches">
-          <span class="m3-pill-label">Dispatched:</span>
-          <span class="m3-pill-value" id="signalCountText">0</span>
+        <div class="trigger-wrap">
+          <div class="trigger-aura" id="triggerAura" aria-hidden="true"></div>
+          <button id="triggerBtn" class="arcade-btn" type="button"
+                  aria-label="Fire phone alert" disabled>
+            <span class="arcade-btn__shine" aria-hidden="true"></span>
+            <span class="arcade-btn__content">
+              <svg class="arcade-btn__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter" aria-hidden="true">
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+              </svg>
+              <span class="arcade-btn__label">FIRE</span>
+              <span class="arcade-btn__sub" id="triggerSubtext">LINKING</span>
+            </span>
+          </button>
         </div>
-      </div>
+
+        <div class="px-tabs mode-select" role="group" aria-label="Alert mode">
+          <button class="px-tab mode-btn" type="button" data-type="beep"
+                  aria-pressed="true" style="--tab-color: var(--neon-green); --tab-glow: rgba(57,255,136,.35)">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+            <span>Beep</span>
+          </button>
+          <button class="px-tab mode-btn" type="button" data-type="urgent"
+                  aria-pressed="false" style="--tab-color: var(--neon-pink); --tab-glow: rgba(255,46,136,.35)">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 2 21h20L12 2z"></path><path d="M12 9v5"></path><path d="M12 17h.01"></path></svg>
+            <span>Siren</span>
+          </button>
+          <button class="px-tab mode-btn" type="button" data-type="vibrate"
+                  aria-pressed="false" style="--tab-color: var(--neon-cyan); --tab-glow: rgba(62,230,255,.35)">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="3" width="10" height="18" rx="1"></rect><path d="M4 8v8M20 8v8"></path><path d="M10 18h4"></path></svg>
+            <span>Vibrate</span>
+          </button>
+        </div>
+
+        <p class="stage__hint">
+          <kbd>SPACE</kbd> / <kbd>ENTER</kbd> FIRE &nbsp;&bull;&nbsp;
+          <kbd>1</kbd><kbd>2</kbd><kbd>3</kbd> MODE &nbsp;&bull;&nbsp;
+          <kbd>M</kbd> MUTE
+        </p>
+
+        <p class="stage__live sr-only" id="liveRegion" role="status" aria-live="polite"></p>
+      </section>
+
+      <!-- Player 2: transmission log -->
+      <aside class="terminal-wrap" aria-labelledby="logTitle">
+        <div class="px-terminal">
+          <div class="px-terminal__head">
+            <span class="px-label" id="logTitle">Transmission Log</span>
+            <button class="px-link" id="clearLog" type="button">Clear</button>
+          </div>
+
+          <ol class="px-terminal__body px-scroll" id="eventLog" aria-live="polite">
+            <li class="px-log-line px-log-line--sys">
+              <span class="px-log-line__time">00:00</span>
+              <span class="px-log-line__msg">[BOOT] ARCADE LINK READY.</span>
+            </li>
+          </ol>
+
+          <div class="px-terminal__foot">
+            <div class="channel-block">
+              <span class="px-label">Locked channel</span>
+              <code class="px-code" id="channelCode">shubbyy/notify/instant</code>
+            </div>
+            <button class="px-btn px-btn--ghost px-btn--sm" id="copyChannel" type="button" title="Copy channel topic">
+              Copy
+            </button>
+          </div>
+        </div>
+
+        <section class="cabinet__manual px-panel" aria-labelledby="manualTitle">
+          <div class="px-row px-row--between">
+            <span class="px-label">Player&rsquo;s Guide</span>
+            <span class="px-badge px-badge--pink">1P</span>
+          </div>
+          <h2 class="px-title cabinet__manual-title" id="manualTitle">How to play</h2>
+          <ol class="manual-steps">
+            <li><span>1</span> Flip the phone listener ON</li>
+            <li><span>2</span> Pick BEEP / SIREN / VIBRATE</li>
+            <li><span>3</span> Hit FIRE and wait for ACK</li>
+          </ol>
+          <p class="cabinet__manual-note">GREEN LED = RECEIVER LINKED</p>
+          <button class="px-btn px-btn--cyan px-btn--block" id="openGuideBtn" type="button">Open full guide</button>
+        </section>
+      </aside>
     </main>
 
-    <!-- Sleek M3 Footer -->
-    <footer class="m3-footer">
-      <p>Direct low-power WebSocket connection &bull; No servers &bull; Instant Delivery</p>
+    <footer class="cabinet__foot">
+      <p class="cabinet__foot-main">MQTT OVER WSS &bull; NO SERVERS &bull; LOW-POWER RECEIVER</p>
+      <p class="cabinet__foot-credit">&copy; 1996 SHUBBYY SYSTEMS &mdash; ALL RIGHTS RESERVED</p>
     </footer>
   </div>
+
+  <!-- How to play -->
+  <div class="px-modal" id="helpModal" role="dialog" aria-modal="true" aria-labelledby="helpTitle" hidden>
+    <div class="px-modal__backdrop" data-close-modal></div>
+    <div class="px-modal__panel px-scroll" role="document">
+      <button class="px-btn px-btn--ghost px-btn--icon px-modal__close" type="button"
+              id="helpClose" aria-label="Close how to play" data-close-modal>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="square" aria-hidden="true">
+          <path d="M6 6l12 12M18 6 6 18"></path>
+        </svg>
+      </button>
+
+      <p class="px-label px-accent-4">Player&rsquo;s Guide</p>
+      <h2 class="px-title px-title--xl" id="helpTitle">How To Play</h2>
+      <div class="px-hr"></div>
+
+      <ol class="help-steps">
+        <li>
+          <span class="help-steps__num">1</span>
+          <div>
+            <p class="help-steps__title">Start the receiver</p>
+            <p class="px-body">On Android, grant notifications, allow battery exemption, then flip <strong>Background Listener</strong> on. The status should read <strong>Connected &amp; Listening</strong>.</p>
+          </div>
+        </li>
+        <li>
+          <span class="help-steps__num">2</span>
+          <div>
+            <p class="help-steps__title">Pick a weapon</p>
+            <p class="px-body">Beep fires a chiptune chirp. Siren wails at full volume. Vibrate uses haptics only.</p>
+          </div>
+        </li>
+        <li>
+          <span class="help-steps__num">3</span>
+          <div>
+            <p class="help-steps__title">Press FIRE</p>
+            <p class="px-body">Tap the big button or press <kbd>SPACE</kbd>. The message is published instantly over MQTT.</p>
+          </div>
+        </li>
+        <li>
+          <span class="help-steps__num">4</span>
+          <div>
+            <p class="help-steps__title">Watch for the ACK</p>
+            <p class="px-body">The receiver replies on the <code class="px-code">/ack</code> channel. A round-trip time proves the alert landed.</p>
+          </div>
+        </li>
+      </ol>
+
+      <div class="px-inset help-channel">
+        <span class="px-label">Shared topic</span>
+        <code class="px-code">shubbyy/notify/instant</code>
+        <button class="px-btn px-btn--cyan px-btn--sm" id="copyChannelModal" type="button">Copy topic</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="px-toast-stack" id="toastStack" aria-live="polite" aria-atomic="false"></div>
+
+  <noscript>
+    <div class="noscript-warning">JavaScript is required to connect to the MQTT broker.</div>
+  </noscript>
 
   <script src="app.js"></script>
 </body>

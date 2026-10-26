@@ -1,29 +1,52 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Material 3 Color Tokens -->
-    <color name="primary">#80D4FF</color>
-    <color name="on_primary">#00344D</color>
-    <color name="primary_container">#004C6E</color>
-    <color name="on_primary_container">#C2E8FF</color>
+    <!-- ======================================================================
+         PIXEL SIGNAL — 90s arcade palette
+         Mirrors design-system.css for the web cabinet.
+         ====================================================================== -->
 
-    <color name="secondary">#B5C9D7</color>
-    <color name="on_secondary">#20333D</color>
-    <color name="secondary_container">#364954</color>
-    <color name="on_secondary_container">#D1E5F3</color>
+    <!-- Primary: phosphor green (online / fire) -->
+    <color name="primary">#39FF88</color>
+    <color name="on_primary">#04140B</color>
+    <color name="primary_container">#0B4D2E</color>
+    <color name="on_primary_container">#B8FFD6</color>
 
-    <color name="background">#0F1418</color>
-    <color name="surface">#171C20</color>
-    <color name="surface_container">#1B2024</color>
-    <color name="surface_container_high">#262B2F</color>
-    <color name="surface_container_highest">#30363A</color>
+    <!-- Secondary: arcade cyan (info / vibrate) -->
+    <color name="secondary">#3EE6FF</color>
+    <color name="on_secondary">#00191F</color>
+    <color name="secondary_container">#0B3A44</color>
+    <color name="on_secondary_container">#B8F6FF</color>
 
-    <color name="text_primary">#DFE3E7</color>
-    <color name="text_secondary">#8A9297</color>
-    <color name="outline">#40484D</color>
+    <!-- Accent neons -->
+    <color name="accent_pink">#FF2E88</color>
+    <color name="on_accent_pink">#22000E</color>
+    <color name="accent_yellow">#FFD23F</color>
+    <color name="on_accent_yellow">#1F1700</color>
+    <color name="accent_purple">#A06BFF</color>
 
-    <color name="success">#4ADE80</color>
-    <color name="success_container">#1A3D29</color>
-    <color name="error">#FFB4AB</color>
-    <color name="error_container">#451D1A</color>
-    <color name="on_error_container">#FFDAD6</color>
+    <!-- Surfaces -->
+    <color name="background">#07030F</color>
+    <color name="background_deep">#04010A</color>
+    <color name="surface">#120A26</color>
+    <color name="surface_container">#1B1038</color>
+    <color name="surface_container_high">#27174F</color>
+    <color name="surface_container_highest">#3A266C</color>
+
+    <!-- Text -->
+    <color name="text_primary">#E9E4FF</color>
+    <color name="text_secondary">#B9AFD8</color>
+    <color name="text_muted">#8B7FB5</color>
+
+    <!-- Lines -->
+    <color name="outline">#3A266C</color>
+    <color name="outline_strong">#55409A</color>
+    <color name="pixel_black">#000000</color>
+
+    <!-- Status -->
+    <color name="success">#39FF88</color>
+    <color name="success_container">#0B3D24</color>
+    <color name="warning">#FFD23F</color>
+    <color name="error">#FF4D6D</color>
+    <color name="error_container">#45101C</color>
+    <color name="on_error_container">#FFD9E0</color>
 </resources>
