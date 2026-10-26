@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Notify Shubbyy - Wireless Instant Trigger</title>
+  <meta name="description" content="Ultra-low power, serverless backend-less web trigger connecting directly to Android devices via MQTT over WebSockets.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <!-- MQTT.js official CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mqtt/4.3.7/mqtt.min.js" integrity="sha512-YAS9862U6G7Bv2pE2qR102aFkXn5D63e0p2gVd7f3lP5T1CqD2/XzQdZkH8w1k1TfE4qgW5Wn2fW5v8A4a5Vsw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+</head>
+<body>
+  <div class="ambient-glow"></div>
+  <div class="ambient-glow ambient-glow-secondary"></div>
+
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="badge">
+        <span class="pulsing-dot"></span>
+        <span id="connectionBadgeText">Broker Disconnected</span>
+      </div>
+      <h1 class="app-title">Notify <span class="gradient-text">Shubbyy</span></h1>
+      <p class="app-subtitle">Zero-backend, ultra-low power instant wireless alert trigger</p>
+    </header>
+
+    <!-- Main Trigger Card -->
+    <main class="trigger-card">
+      <div class="button-wrapper">
+        <div class="button-ripple-ring" id="rippleRing"></div>
+        <button id="triggerBtn" class="trigger-button" aria-label="Trigger Android Beep" disabled>
+          <div class="trigger-inner">
+            <svg class="trigger-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+            </svg>
+            <span class="trigger-label">TRIGGER BEEP</span>
+            <span class="trigger-sublabel" id="triggerSubtext">Connecting...</span>
+          </div>
+        </button>
+      </div>
+
+      <!-- Quick Alert Types -->
+      <div class="alert-types-grid">
+        <button class="alert-type-btn active" data-type="beep" id="alertTypeBeep">
+          <span class="alert-icon">⚡</span>
+          <span class="alert-name">Quick Beep</span>
+        </button>
+        <button class="alert-type-btn" data-type="urgent" id="alertTypeUrgent">
+          <span class="alert-icon">🚨</span>
+          <span class="alert-name">Urgent Alarm</span>
+        </button>
+        <button class="alert-type-btn" data-type="vibrate" id="alertTypeVibrate">
+          <span class="alert-icon">📳</span>
+          <span class="alert-name">Vibrate Only</span>
+        </button>
+      </div>
+
+      <!-- Live Status & Stats Bar -->
+      <div class="status-panel">
+        <div class="status-row">
+          <span class="status-title">Broker Status</span>
+          <span class="status-indicator" id="brokerIndicator">
+            <span class="status-dot"></span>
+            <span id="brokerStatusText">Connecting to HiveMQ...</span>
+          </span>
+        </div>
+        <div class="status-row">
+          <span class="status-title">Latency / Round-Trip</span>
+          <span class="status-value" id="latencyStat">-- ms</span>
+        </div>
+        <div class="status-row">
+          <span class="status-title">Total Signals Sent</span>
+          <span class="status-value" id="signalCounter">0</span>
+        </div>
+      </div>
+    </main>
+
+    <!-- Settings & Topic Configuration -->
+    <section class="config-card">
+      <div class="card-header">
+        <div class="card-header-icon">⚙️</div>
+        <div>
+          <h2 class="card-title">Channel Configuration</h2>
+          <p class="card-subtitle">Keep this channel ID identical in your Android app</p>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="topicInput" class="form-label">MQTT Channel Topic</label>
+        <div class="input-with-button">
+          <input type="text" id="topicInput" class="form-input" placeholder="e.g. shubbyy/alert/device_84920">
+          <button id="generateTopicBtn" class="action-btn" title="Generate Random Secure Channel">🎲 Random</button>
+          <button id="copyTopicBtn" class="action-btn" title="Copy to clipboard">📋 Copy</button>
+        </div>
+        <span class="input-help">Use a unique, secret path to prevent unintended triggers from third parties.</span>
+      </div>
+
+      <div class="form-group">
+        <label for="brokerSelect" class="form-label">WebSocket Broker Gateway</label>
+        <select id="brokerSelect" class="form-input">
+          <option value="wss://broker.hivemq.com:8884/mqtt">HiveMQ Public (wss://broker.hivemq.com:8884/mqtt)</option>
+          <option value="wss://broker.emqx.io:8084/mqtt">EMQX Public (wss://broker.emqx.io:8084/mqtt)</option>
+          <option value="custom">Custom MQTT Broker URL...</option>
+        </select>
+      </div>
+
+      <div class="form-group" id="customBrokerGroup" style="display: none;">
+        <label for="customBrokerInput" class="form-label">Custom Broker WebSocket URL</label>
+        <input type="text" id="customBrokerInput" class="form-input" placeholder="wss://your-broker-domain:port/mqtt">
+      </div>
+
+      <div class="form-actions">
+        <button id="reconnectBtn" class="primary-btn">Save & Reconnect</button>
+        <button id="testAudioBtn" class="secondary-btn">🔊 Test Local Audio</button>
+      </div>
+    </section>
+
+    <!-- Activity Log Console -->
+    <section class="console-card">
+      <div class="card-header">
+        <div class="card-header-icon">📟</div>
+        <div>
+          <h2 class="card-title">Activity Console</h2>
+          <p class="card-subtitle">Live real-time transmission and acknowledgement logs</p>
+        </div>
+        <button id="clearLogBtn" class="clear-btn">Clear</button>
+      </div>
+      <div class="console-screen" id="consoleScreen">
+        <div class="log-entry log-system">
+          <span class="log-time">[00:00:00]</span>
+          <span class="log-msg">System initialized. Awaiting broker connection...</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer with instructions -->
+    <footer class="app-footer">
+      <p>🚀 Powered by <strong>MQTT over WebSockets</strong> &bull; Completely backendless &bull; Safe for GitHub Pages</p>
+      <div class="footer-links">
+        <a href="#quick-guide" id="openGuideLink">How it works &amp; Android Setup &rarr;</a>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Setup modal / guide -->
+  <div class="modal-overlay" id="guideModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title">System Architecture &amp; Android Setup</h3>
+        <button class="modal-close-btn" id="closeGuideBtn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <h4>1. Why is this 100% backendless?</h4>
+        <p>Instead of requiring a Node.js/Python server to sign Google FCM OAuth2 credentials, your browser securely establishes a direct WebSocket connection with a distributed MQTT broker. The browser acts as the direct publisher.</p>
+        
+        <h4>2. How does Android stay ultra-low power?</h4>
+        <p>MQTT maintains a single persistent, idle TCP socket with 60-second keep-alive ping packets (only 2 bytes). The phone does NOT wake up or poll continuously; it passively sleeps until the socket receives an incoming packet, consuming less than 1% battery over 24 hours.</p>
+
+        <h4>3. Pairing with Android</h4>
+        <p>Ensure the <strong>MQTT Channel Topic</strong> configured above matches the <code>topic</code> string inside your native Android app's <code>MqttForegroundService.kt</code>.</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

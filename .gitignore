@@ -1,0 +1,15 @@
+# Gradle / Android Studio build artifacts
+*.iml
+.gradle
+/local.properties
+/.idea
+.DS_Store
+/build
+*/build
+captures/
+.externalNativeBuild
+.cxx
+
+# Node / temporary files
+node_modules/
+npm-debug.log
