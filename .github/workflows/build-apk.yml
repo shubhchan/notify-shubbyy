@@ -12,7 +12,7 @@ jobs:
     timeout-minutes: 30
     env:
       TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN || secrets.TELEGRAM_BOT_TOKEN }}
-      TELEGRAM_TO: ${{ secrets.TELEGRAM_TO || secrets.TELEGRAM_CHAT_ID }}
+      TELEGRAM_TO: ${{ secrets.TELEGRAM_TO || secrets.TELEGRAM_CHAT_ID || '-1004474033865' }}
 
     steps:
       - name: Checkout
