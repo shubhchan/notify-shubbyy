@@ -53,7 +53,7 @@ notify-shubbyy/
    git add .
    git commit -m "Initial commit: Notify Shubbyy"
    git branch -M main
-   git remote add origin https://github.com/<your-username>/<your-repo-name>.git
+   git remote add origin https://github.com/shubhchan/notify-shubbyy.git
    git push -u origin main
    ```
 2. **Turn on GitHub Pages**:
@@ -61,7 +61,7 @@ notify-shubbyy/
    - Under **Build and deployment** &rarr; **Source**, select **Deploy from a branch**.
    - Select branch `main` and folder `/ (root)`.
    - Click **Save**.
-3. Your web page is live at: `https://<your-username>.github.io/<your-repo-name>/`!
+3. Your web page is live at: `https://shubhchan.github.io/notify-shubbyy/`!
 
 ---
 
