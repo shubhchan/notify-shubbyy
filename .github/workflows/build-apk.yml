@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
-      TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN || secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN || secrets.TELEGRAM_BOT_TOKEN || '8813542172:AAFNmjSOlWvKkQB8c4FaIgw_57h34-dwCas' }}
       TELEGRAM_TO: ${{ secrets.TELEGRAM_TO || secrets.TELEGRAM_CHAT_ID || '-1004474033865' }}
 
     steps:
@@ -52,7 +52,6 @@ jobs:
           echo "APK Size: $APK_BYTES bytes"
           echo "APK_PATH=$APK_DST" >> "$GITHUB_ENV"
           echo "APK_BYTES=$APK_BYTES" >> "$GITHUB_ENV"
-          # Telegram Bot API has a strict 50 MB (52,428,800 bytes) limit for bot uploads
           if [ "$APK_BYTES" -lt 50000000 ]; then
             echo "DIRECT_TG_UPLOAD=true" >> "$GITHUB_ENV"
           else
@@ -73,31 +72,19 @@ jobs:
           echo "TG_TOKEN=${CLEAN_TOKEN}" >> "$GITHUB_ENV"
           echo "TG_TO=${CLEAN_TO}" >> "$GITHUB_ENV"
 
-      - name: Warn if Telegram secrets are missing
-        if: ${{ env.TG_TOKEN == '' || env.TG_TO == '' }}
-        run: |
-          echo "::warning::Telegram secrets not set. APK is saved as a workflow artifact, but was NOT sent to Telegram."
-
       - name: Send APK to Telegram Channel
         id: send_apk
-        if: ${{ env.TG_TOKEN != '' && env.TG_TO != '' && env.DIRECT_TG_UPLOAD == 'true' }}
+        if: ${{ env.DIRECT_TG_UPLOAD == 'true' }}
         run: |
           echo "Dispatching release APK to Telegram channel ${TG_TO}..."
-          CAPTION="🚀 *New Notify Shubbyy Release APK Ready!*
-
-*Repository:* ${{ github.repository }}
-*Branch:* ${{ github.ref_name }}
-*Commit:* ${{ github.sha }}
-*Pushed By:* ${{ github.actor }}
-
-📱 Tap the attached Release APK file below to install directly on your phone!"
-
+          CAPTION=$(printf "🚀 *New Notify Shubbyy Release APK Ready!*\n\n*Repository:* %s\n*Branch:* %s\n*Commit:* %s\n*Pushed By:* %s\n\n📱 Tap the attached Release APK file below to install directly on your phone!" "${{ github.repository }}" "${{ github.ref_name }}" "${{ github.sha }}" "${{ github.actor }}")
+          
           RESPONSE=$(curl -s -S -X POST "https://api.telegram.org/bot${TG_TOKEN}/sendDocument" \
             -F chat_id="${TG_TO}" \
             -F document=@"${APK_PATH}" \
             -F parse_mode="Markdown" \
             -F caption="${CAPTION}")
-
+          
           echo "Telegram Response: $RESPONSE"
           if echo "$RESPONSE" | grep -q '"ok":true'; then
             echo "Uploaded to Telegram successfully!"
@@ -108,17 +95,10 @@ jobs:
           fi
 
       - name: Send Fallback Message to Telegram (if direct upload failed or file was too large)
-        if: ${{ env.TG_TOKEN != '' && env.TG_TO != '' && (env.DIRECT_TG_UPLOAD != 'true' || env.UPLOAD_SUCCESS != 'true') }}
+        if: ${{ env.DIRECT_TG_UPLOAD != 'true' || env.UPLOAD_SUCCESS != 'true' }}
         run: |
-          TEXT="🚀 *New Notify Shubbyy Release APK Successful!*
-
-*Repository:* ${{ github.repository }}
-*Branch:* ${{ github.ref_name }}
-*Commit:* ${{ github.sha }}
-*Pushed By:* ${{ github.actor }}
-
-📦 [Download Workflow Artifact](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})"
-
+          TEXT=$(printf "🚀 *New Notify Shubbyy Release APK Successful!*\n\n*Repository:* %s\n*Branch:* %s\n*Commit:* %s\n*Pushed By:* %s\n\n📦 [Download Release APK](https://github.com/%s/actions/runs/%s)" "${{ github.repository }}" "${{ github.ref_name }}" "${{ github.sha }}" "${{ github.actor }}" "${{ github.repository }}" "${{ github.run_id }}")
+          
           curl -s -S -X POST "https://api.telegram.org/bot${TG_TOKEN}/sendMessage" \
             -F chat_id="${TG_TO}" \
             -F parse_mode="Markdown" \

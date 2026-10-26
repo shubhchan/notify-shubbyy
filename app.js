@@ -40,21 +40,44 @@ function playLocalTone(type) {
     gain.connect(audioCtx.destination);
 
     if (type === "urgent") {
+      // Authentic emergency siren wail (multi-cycle sweeps)
+      const now = audioCtx.currentTime;
       osc.type = "sawtooth";
-      osc.frequency.setValueAtTime(880, audioCtx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(1400, audioCtx.currentTime + 0.15);
-      osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.3);
-      gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.35);
-      osc.start();
-      osc.stop(audioCtx.currentTime + 0.35);
+      osc.frequency.setValueAtTime(650, now);
+      // Sweep 1
+      osc.frequency.exponentialRampToValueAtTime(1550, now + 0.35);
+      osc.frequency.exponentialRampToValueAtTime(650, now + 0.70);
+      // Sweep 2
+      osc.frequency.exponentialRampToValueAtTime(1550, now + 1.05);
+      osc.frequency.exponentialRampToValueAtTime(650, now + 1.40);
+
+      gain.gain.setValueAtTime(0.3, now);
+      gain.gain.setValueAtTime(0.3, now + 1.30);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 1.45);
+
+      osc.start(now);
+      osc.stop(now + 1.45);
+    } else if (type === "vibrate") {
+      if ("vibrate" in navigator) {
+        navigator.vibrate([200, 100, 200, 100, 400]);
+      }
     } else {
+      // Piercing high-decibel double-chime alert
+      const now = audioCtx.currentTime;
       osc.type = "sine";
-      osc.frequency.setValueAtTime(1046.5, audioCtx.currentTime);
-      gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.22);
-      osc.start();
-      osc.stop(audioCtx.currentTime + 0.22);
+      osc.frequency.setValueAtTime(1800, now);
+      osc.frequency.setValueAtTime(1800, now + 0.12);
+      osc.frequency.setValueAtTime(2600, now + 0.16);
+      osc.frequency.setValueAtTime(2600, now + 0.35);
+      osc.frequency.setValueAtTime(1800, now + 0.45);
+      osc.frequency.setValueAtTime(1800, now + 0.57);
+      osc.frequency.setValueAtTime(2600, now + 0.61);
+
+      gain.gain.setValueAtTime(0.35, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.95);
+
+      osc.start(now);
+      osc.stop(now + 0.95);
     }
   } catch (err) {}
 }

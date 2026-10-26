@@ -194,15 +194,35 @@
                 android:textColor="@color/text_primary" />
 
             <!-- Test Hardware Beep -->
-            <Button
-                android:id="@+id/btnTestBeep"
-                style="@style/Widget.Material3.Button"
+            <!-- Test Alert Buttons (Beep & Siren) -->
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
-                android:backgroundTint="@color/primary_container"
-                android:text="⚡ Test Hardware Beep &amp; Vibrate"
-                android:textColor="@color/on_primary_container" />
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/btnTestBeep"
+                    style="@style/Widget.Material3.Button"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="6dp"
+                    android:layout_weight="1"
+                    android:backgroundTint="@color/primary_container"
+                    android:text="⚡ Test Beep"
+                    android:textColor="@color/on_primary_container" />
+
+                <Button
+                    android:id="@+id/btnTestSiren"
+                    style="@style/Widget.Material3.Button"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
+                    android:layout_weight="1"
+                    android:backgroundTint="@color/error_container"
+                    android:text="🚨 Test Siren"
+                    android:textColor="@color/on_error_container" />
+            </LinearLayout>
 
         </LinearLayout>
 

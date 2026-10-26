@@ -116,9 +116,13 @@ class MainActivity : AppCompatActivity() {
             requestNotificationPermission()
         }
 
-        // Test Hardware Beep
+        // Test Hardware Beep & Siren
         binding.btnTestBeep.setOnClickListener {
             testHardwareBeep()
+        }
+
+        binding.btnTestSiren.setOnClickListener {
+            testHardwareSiren()
         }
 
         // Clear log
@@ -229,43 +233,20 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun testHardwareBeep() {
-        Toast.makeText(this, "Testing sound & vibration...", Toast.LENGTH_SHORT).show()
-
+        Toast.makeText(this, "Playing Piercing Beep Tone...", Toast.LENGTH_SHORT).show()
         try {
-            val toneGen = ToneGenerator(AudioManager.STREAM_ALARM, 100)
-            toneGen.startTone(ToneGenerator.TONE_CDMA_ALERT_CALL_GUARD, 400)
+            AlertSoundPlayer.playAlert(this, "beep")
+            binding.tvEventLog.append("[Local Test] ⚡ Piercing Beep & Haptics Triggered\n")
+        } catch (e: Exception) {
+            Toast.makeText(this, "Test error: ${e.message}", Toast.LENGTH_SHORT).show()
+        }
+    }
 
-            val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                val vibratorManager = getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
-                vibratorManager.defaultVibrator
-            } else {
-                @Suppress("DEPRECATION")
-                getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
-            }
-
-            if (vibrator.hasVibrator()) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    vibrator.vibrate(
-                        VibrationEffect.createWaveform(
-                            longArrayOf(0, 300, 150, 300),
-                            intArrayOf(0, 255, 0, 255),
-                            -1
-                        )
-                    )
-                } else {
-                    @Suppress("DEPRECATION")
-                    vibrator.vibrate(longArrayOf(0, 300, 150, 300), -1)
-                }
-            }
-
-            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-                try {
-                    toneGen.release()
-                } catch (e: Exception) {}
-            }, 600)
-
-            binding.tvEventLog.append("[Local Test] Beep & vibration OK\n")
-
+    private fun testHardwareSiren() {
+        Toast.makeText(this, "Playing Loud Emergency Siren...", Toast.LENGTH_SHORT).show()
+        try {
+            AlertSoundPlayer.playAlert(this, "urgent")
+            binding.tvEventLog.append("[Local Test] 🚨 Loud Emergency Siren Triggered\n")
         } catch (e: Exception) {
             Toast.makeText(this, "Test error: ${e.message}", Toast.LENGTH_SHORT).show()
         }

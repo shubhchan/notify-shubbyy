@@ -164,7 +164,7 @@ class MqttForegroundService : Service() {
     }
 
     private fun handleIncomingTrigger(payload: String) {
-        wakeLock?.acquire(5000)
+        wakeLock?.acquire(7000)
 
         var alertType = "beep"
         var timestamp = System.currentTimeMillis()
@@ -196,50 +196,10 @@ class MqttForegroundService : Service() {
 
     private fun triggerHardwareAlert(type: String) {
         try {
-            val toneType = if (type == "urgent") {
-                ToneGenerator.TONE_CDMA_EMERGENCY_RINGBACK
-            } else {
-                ToneGenerator.TONE_CDMA_ALERT_CALL_GUARD
-            }
-            val toneDuration = if (type == "urgent") 800 else 400
-
-            val toneGen = ToneGenerator(AudioManager.STREAM_ALARM, 100)
-            toneGen.startTone(toneType, toneDuration)
-
-            val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                val vibratorManager = getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
-                vibratorManager.defaultVibrator
-            } else {
-                @Suppress("DEPRECATION")
-                getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
-            }
-
-            if (vibrator.hasVibrator()) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    val timings = if (type == "urgent") {
-                        longArrayOf(0, 400, 200, 400, 200, 600)
-                    } else {
-                        longArrayOf(0, 300, 150, 300)
-                    }
-                    val amplitudes = if (type == "urgent") {
-                        intArrayOf(0, 255, 0, 255, 0, 255)
-                    } else {
-                        intArrayOf(0, 200, 0, 200)
-                    }
-                    vibrator.vibrate(VibrationEffect.createWaveform(timings, amplitudes, -1))
-                } else {
-                    @Suppress("DEPRECATION")
-                    vibrator.vibrate(longArrayOf(0, 300, 150, 300), -1)
-                }
-            }
-
-            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
-                try {
-                    toneGen.release()
-                } catch (e: Exception) {}
-            }, (toneDuration + 200).toLong())
-
-        } catch (e: Exception) {}
+            AlertSoundPlayer.playAlert(this, type)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error playing alert tone", e)
+        }
     }
 
     private fun sendAcknowledgment(sentAt: Long) {

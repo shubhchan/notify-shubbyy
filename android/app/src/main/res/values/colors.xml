@@ -25,4 +25,5 @@
     <color name="success_container">#1A3D29</color>
     <color name="error">#FFB4AB</color>
     <color name="error_container">#451D1A</color>
+    <color name="on_error_container">#FFDAD6</color>
 </resources>
