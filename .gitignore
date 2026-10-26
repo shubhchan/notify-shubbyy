@@ -1,8 +1,8 @@
 # Gradle / Android Studio build artifacts
 *.iml
 .gradle
-/local.properties
-/.idea
+**/local.properties
+.idea/
 .DS_Store
 /build
 */build
