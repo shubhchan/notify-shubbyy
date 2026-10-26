@@ -140,8 +140,16 @@ function connectToBroker() {
     reconnectPeriod: 4000
   };
 
+  const mqttLib = window.mqtt || (typeof mqtt !== "undefined" ? mqtt : null);
+  if (!mqttLib || typeof mqttLib.connect !== "function") {
+    updateConnectionStatus("connecting", "Loading MQTT library...");
+    appendLog("Waiting for MQTT library to initialize...", "info");
+    setTimeout(connectToBroker, 600);
+    return;
+  }
+
   try {
-    client = mqtt.connect(currentBroker, options);
+    client = mqttLib.connect(currentBroker, options);
 
     client.on("connect", () => {
       updateConnectionStatus("ready", "System Ready (Connected)");

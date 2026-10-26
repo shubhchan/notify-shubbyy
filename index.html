@@ -9,8 +9,13 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
-  <!-- MQTT.js official CDN -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/mqtt/4.3.7/mqtt.min.js" integrity="sha512-YAS9862U6G7Bv2pE2qR102aFkXn5D63e0p2gVd7f3lP5T1CqD2/XzQdZkH8w1k1TfE4qgW5Wn2fW5v8A4a5Vsw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <!-- MQTT.js client: Local bundle for 100% reliable zero-CDN offline/GitHub Pages serving, with fallback -->
+  <script src="mqtt.min.js"></script>
+  <script>
+    if (typeof mqtt === 'undefined') {
+      document.write('<script src="https://unpkg.com/mqtt@4.3.7/dist/mqtt.min.js"><\/script>');
+    }
+  </script>
 </head>
 <body>
   <div class="ambient-glow"></div>
