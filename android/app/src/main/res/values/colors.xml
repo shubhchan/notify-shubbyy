@@ -1,14 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="primary">#0284C7</color>
-    <color name="primary_variant">#0369A1</color>
-    <color name="secondary">#8B5CF6</color>
-    <color name="background">#080C16</color>
-    <color name="surface">#0F172A</color>
-    <color name="surface_variant">#1E293B</color>
-    <color name="border">#334155</color>
-    <color name="text_primary">#F8FAFC</color>
-    <color name="text_secondary">#94A3B8</color>
-    <color name="emerald">#10B981</color>
-    <color name="rose">#F43F5E</color>
-    <color name="amber">#F59E0B</color>
+    <!-- Material 3 Color Tokens -->
+    <color name="primary">#80D4FF</color>
+    <color name="on_primary">#00344D</color>
+    <color name="primary_container">#004C6E</color>
+    <color name="on_primary_container">#C2E8FF</color>
+
+    <color name="secondary">#B5C9D7</color>
+    <color name="on_secondary">#20333D</color>
+    <color name="secondary_container">#364954</color>
+    <color name="on_secondary_container">#D1E5F3</color>
+
+    <color name="background">#0F1418</color>
+    <color name="surface">#171C20</color>
+    <color name="surface_container">#1B2024</color>
+    <color name="surface_container_high">#262B2F</color>
+    <color name="surface_container_highest">#30363A</color>
+
+    <color name="text_primary">#DFE3E7</color>
+    <color name="text_secondary">#8A9297</color>
+    <color name="outline">#40484D</color>
+
+    <color name="success">#4ADE80</color>
+    <color name="success_container">#1A3D29</color>
+    <color name="error">#FFB4AB</color>
+    <color name="error_container">#451D1A</color>
 </resources>

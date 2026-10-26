@@ -4,7 +4,6 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
-import android.media.AudioAttributes
 import android.media.AudioManager
 import android.media.ToneGenerator
 import android.os.Build
@@ -25,7 +24,6 @@ class MqttForegroundService : Service() {
         const val TAG = "MqttService"
         const val ACTION_START = "com.shubbyy.notify.ACTION_START"
         const val ACTION_STOP = "com.shubbyy.notify.ACTION_STOP"
-        const val ACTION_UPDATE_TOPIC = "com.shubbyy.notify.ACTION_UPDATE_TOPIC"
 
         const val BROADCAST_STATUS_UPDATE = "com.shubbyy.notify.STATUS_UPDATE"
         const val BROADCAST_EVENT_ARRIVED = "com.shubbyy.notify.EVENT_ARRIVED"
@@ -35,14 +33,14 @@ class MqttForegroundService : Service() {
         const val EXTRA_TIMESTAMP = "extra_timestamp"
 
         const val PREFS_NAME = "notify_prefs"
-        const val PREF_KEY_TOPIC = "pref_topic"
         const val PREF_KEY_ENABLED = "pref_enabled"
-        const val DEFAULT_TOPIC = "shubbyy/alert/default_channel"
-        const val DEFAULT_BROKER_TCP = "tcp://broker.hivemq.com:1883"
+
+        // PERMANENT, LOCKED CHANNEL - IDENTICAL ON WEB AND ANDROID
+        const val FIXED_TOPIC = "shubbyy/notify/instant"
+        const val DEFAULT_BROKER_SSL = "ssl://broker.emqx.io:8883"
     }
 
     private var mqttClient: MqttAsyncClient? = null
-    private var currentTopic: String = DEFAULT_TOPIC
     private var wakeLock: PowerManager.WakeLock? = null
     private var isConnected = false
 
@@ -59,23 +57,13 @@ class MqttForegroundService : Service() {
 
         when (action) {
             ACTION_STOP -> {
-                Log.d(TAG, "Stopping foreground service requested")
+                Log.d(TAG, "Stopping foreground service")
                 stopMqtt()
                 stopForeground(STOP_FOREGROUND_REMOVE)
                 stopSelf()
                 return START_NOT_STICKY
             }
-            ACTION_UPDATE_TOPIC -> {
-                val prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-                val newTopic = prefs.getString(PREF_KEY_TOPIC, DEFAULT_TOPIC) ?: DEFAULT_TOPIC
-                if (newTopic != currentTopic) {
-                    currentTopic = newTopic
-                    reconnectMqtt()
-                }
-            }
             ACTION_START -> {
-                val prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-                currentTopic = prefs.getString(PREF_KEY_TOPIC, DEFAULT_TOPIC) ?: DEFAULT_TOPIC
                 startInForeground()
                 startMqtt()
             }
@@ -88,7 +76,7 @@ class MqttForegroundService : Service() {
         val notification = NotificationHelper.buildForegroundServiceNotification(
             this,
             "Connecting...",
-            currentTopic
+            FIXED_TOPIC
         )
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -96,11 +84,7 @@ class MqttForegroundService : Service() {
                 this,
                 NotificationHelper.NOTIFICATION_ID_SERVICE,
                 notification,
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-                    ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
-                } else {
-                    ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
-                }
+                ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
             )
         } else {
             startForeground(NotificationHelper.NOTIFICATION_ID_SERVICE, notification)
@@ -112,25 +96,25 @@ class MqttForegroundService : Service() {
             return
         }
 
-        broadcastStatus("Connecting to HiveMQ broker...")
+        broadcastStatus("Connecting to Broker...")
         updateNotification("Connecting...")
 
         try {
             val clientId = "android_" + System.currentTimeMillis().toString().takeLast(6)
-            mqttClient = MqttAsyncClient(DEFAULT_BROKER_TCP, clientId, MemoryPersistence())
+            mqttClient = MqttAsyncClient(DEFAULT_BROKER_SSL, clientId, MemoryPersistence())
 
             val options = MqttConnectOptions().apply {
                 isAutomaticReconnect = true
                 isCleanSession = false
-                keepAliveInterval = 60 // 60-second passive keep-alive = negligible battery impact
+                keepAliveInterval = 60
                 connectionTimeout = 30
+                socketFactory = javax.net.ssl.SSLSocketFactory.getDefault()
             }
 
             mqttClient?.setCallback(object : MqttCallbackExtended {
                 override fun connectComplete(reconnect: Boolean, serverURI: String?) {
                     isConnected = true
-                    val msg = if (reconnect) "Reconnected to Broker" else "Connected & Listening"
-                    Log.i(TAG, "MQTT Connection complete: $msg")
+                    val msg = if (reconnect) "Reconnected" else "Connected & Listening"
                     broadcastStatus(msg)
                     updateNotification("Active (Listening)")
                     subscribeToTopic()
@@ -138,15 +122,13 @@ class MqttForegroundService : Service() {
 
                 override fun connectionLost(cause: Throwable?) {
                     isConnected = false
-                    Log.w(TAG, "MQTT Connection lost: ${cause?.message}")
-                    broadcastStatus("Connection lost. Auto-reconnecting...")
+                    broadcastStatus("Reconnecting...")
                     updateNotification("Reconnecting...")
                 }
 
                 override fun messageArrived(topic: String?, message: MqttMessage?) {
                     val payload = message?.toString() ?: ""
-                    Log.i(TAG, "Message arrived on $topic: $payload")
-                    handleIncomingTrigger(topic, payload)
+                    handleIncomingTrigger(payload)
                 }
 
                 override fun deliveryComplete(token: IMqttDeliveryToken?) {}
@@ -154,42 +136,36 @@ class MqttForegroundService : Service() {
 
             mqttClient?.connect(options, null, object : IMqttActionListener {
                 override fun onSuccess(asyncActionToken: IMqttToken?) {
-                    Log.d(TAG, "Initial connect success")
+                    Log.d(TAG, "MQTT connected")
                 }
 
                 override fun onFailure(asyncActionToken: IMqttToken?, exception: Throwable?) {
-                    Log.e(TAG, "Initial connect failed: ${exception?.message}")
-                    broadcastStatus("Broker connect failed. Retrying...")
+                    broadcastStatus("Broker connecting...")
                 }
             })
 
         } catch (e: Exception) {
-            Log.e(TAG, "Error starting MQTT", e)
-            broadcastStatus("Init error: ${e.localizedMessage}")
+            broadcastStatus("Init error")
         }
     }
 
     private fun subscribeToTopic() {
         try {
-            mqttClient?.subscribe(currentTopic, 1, null, object : IMqttActionListener {
+            mqttClient?.subscribe(FIXED_TOPIC, 1, null, object : IMqttActionListener {
                 override fun onSuccess(asyncActionToken: IMqttToken?) {
-                    Log.i(TAG, "Subscribed successfully to: $currentTopic")
+                    Log.i(TAG, "Subscribed to $FIXED_TOPIC")
                 }
 
                 override fun onFailure(asyncActionToken: IMqttToken?, exception: Throwable?) {
-                    Log.e(TAG, "Failed to subscribe to $currentTopic", exception)
+                    Log.e(TAG, "Failed subscribe $FIXED_TOPIC", exception)
                 }
             })
-        } catch (e: Exception) {
-            Log.e(TAG, "Subscribe error", e)
-        }
+        } catch (e: Exception) {}
     }
 
-    private fun handleIncomingTrigger(topic: String?, payload: String) {
-        // 1. Acquire partial wakelock so CPU stays alive even if device is asleep
+    private fun handleIncomingTrigger(payload: String) {
         wakeLock?.acquire(5000)
 
-        // 2. Parse payload type
         var alertType = "beep"
         var timestamp = System.currentTimeMillis()
         try {
@@ -198,21 +174,16 @@ class MqttForegroundService : Service() {
                 alertType = json.optString("type", "beep")
                 timestamp = json.optLong("timestamp", System.currentTimeMillis())
             }
-        } catch (e: Exception) {
-            // fallback plain string
-        }
+        } catch (e: Exception) {}
 
-        // 3. Play physical sound & vibration
         triggerHardwareAlert(alertType)
 
-        // 4. Show Heads-Up High Priority Notification
         NotificationHelper.showHeadsUpAlertNotification(
             this,
             "⚡ Web Page Triggered!",
-            "Channel: $currentTopic [Mode: ${alertType.uppercase()}]"
+            "Alert: ${alertType.uppercase()} | Channel: $FIXED_TOPIC"
         )
 
-        // 5. Broadcast to MainActivity to update live log
         val intent = Intent(BROADCAST_EVENT_ARRIVED).apply {
             putExtra(EXTRA_PAYLOAD, payload)
             putExtra(EXTRA_TIMESTAMP, timestamp)
@@ -220,13 +191,11 @@ class MqttForegroundService : Service() {
         }
         sendBroadcast(intent)
 
-        // 6. Send optional latency ACK back to web client
         sendAcknowledgment(timestamp)
     }
 
     private fun triggerHardwareAlert(type: String) {
         try {
-            // Hardware Tone Generator
             val toneType = if (type == "urgent") {
                 ToneGenerator.TONE_CDMA_EMERGENCY_RINGBACK
             } else {
@@ -237,7 +206,6 @@ class MqttForegroundService : Service() {
             val toneGen = ToneGenerator(AudioManager.STREAM_ALARM, 100)
             toneGen.startTone(toneType, toneDuration)
 
-            // Hardware Vibration
             val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 val vibratorManager = getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
                 vibratorManager.defaultVibrator
@@ -265,22 +233,19 @@ class MqttForegroundService : Service() {
                 }
             }
 
-            // Release tone generator after sound ends
             android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
                 try {
                     toneGen.release()
                 } catch (e: Exception) {}
             }, (toneDuration + 200).toLong())
 
-        } catch (e: Exception) {
-            Log.e(TAG, "Error playing alert tone or vibration", e)
-        }
+        } catch (e: Exception) {}
     }
 
     private fun sendAcknowledgment(sentAt: Long) {
         try {
             if (mqttClient?.isConnected == true) {
-                val ackTopic = "$currentTopic/ack"
+                val ackTopic = "$FIXED_TOPIC/ack"
                 val ackJson = JSONObject().apply {
                     put("status", "received")
                     put("sentAt", sentAt)
@@ -289,14 +254,7 @@ class MqttForegroundService : Service() {
                 val msg = MqttMessage(ackJson.toString().toByteArray()).apply { qos = 0 }
                 mqttClient?.publish(ackTopic, msg)
             }
-        } catch (e: Exception) {
-            Log.w(TAG, "Failed to publish ACK: ${e.message}")
-        }
-    }
-
-    private fun reconnectMqtt() {
-        stopMqtt()
-        startMqtt()
+        } catch (e: Exception) {}
     }
 
     private fun stopMqtt() {
@@ -305,9 +263,7 @@ class MqttForegroundService : Service() {
                 mqttClient?.disconnect()
             }
             mqttClient?.close()
-        } catch (e: Exception) {
-            Log.e(TAG, "Error disconnecting MQTT", e)
-        }
+        } catch (e: Exception) {}
         isConnected = false
     }
 
@@ -323,7 +279,7 @@ class MqttForegroundService : Service() {
         val notification = NotificationHelper.buildForegroundServiceNotification(
             this,
             statusText,
-            currentTopic
+            FIXED_TOPIC
         )
         val manager = getSystemService(Context.NOTIFICATION_SERVICE) as android.app.NotificationManager
         manager.notify(NotificationHelper.NOTIFICATION_ID_SERVICE, notification)

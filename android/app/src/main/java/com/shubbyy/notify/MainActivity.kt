@@ -35,19 +35,15 @@ class MainActivity : AppCompatActivity() {
         getSharedPreferences(MqttForegroundService.PREFS_NAME, Context.MODE_PRIVATE)
     }
 
-    // Permission launcher for Android 13+ (API 33) Notification permission
     private val notificationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         if (isGranted) {
-            Toast.makeText(this, "Notification permission granted!", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Notification permission active", Toast.LENGTH_SHORT).show()
             updatePermissionButtonsState()
-        } else {
-            Toast.makeText(this, "Notification permission denied. Alerts may not show heads-up.", Toast.LENGTH_LONG).show()
         }
     }
 
-    // Receiver for live updates from foreground service
     private val serviceUpdateReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             when (intent?.action) {
@@ -59,7 +55,7 @@ class MainActivity : AppCompatActivity() {
                     val payload = intent.getStringExtra(MqttForegroundService.EXTRA_PAYLOAD) ?: ""
                     val timestamp = intent.getLongExtra(MqttForegroundService.EXTRA_TIMESTAMP, System.currentTimeMillis())
                     val timeStr = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date(timestamp))
-                    val logEntry = "[$timeStr] TRIGGER ARRIVED: $payload\n"
+                    val logEntry = "[$timeStr] TRIGGER ARRIVED\n"
                     binding.tvEventLog.append(logEntry)
                 }
             }
@@ -110,25 +106,6 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        // Save Topic
-        binding.btnSaveTopic.setOnClickListener {
-            val topic = binding.etTopic.text.toString().trim()
-            if (topic.isEmpty()) {
-                Toast.makeText(this, "Please enter a valid channel topic", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            }
-            prefs.edit().putString(MqttForegroundService.PREF_KEY_TOPIC, topic).apply()
-            Toast.makeText(this, "Channel topic saved!", Toast.LENGTH_SHORT).show()
-
-            if (binding.switchService.isChecked) {
-                // Update running service
-                val intent = Intent(this, MqttForegroundService::class.java).apply {
-                    action = MqttForegroundService.ACTION_UPDATE_TOPIC
-                }
-                startService(intent)
-            }
-        }
-
         // Battery optimization exemption button
         binding.btnBatteryOpt.setOnClickListener {
             requestBatteryOptimizationExemption()
@@ -151,17 +128,14 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun loadPreferences() {
-        val topic = prefs.getString(MqttForegroundService.PREF_KEY_TOPIC, MqttForegroundService.DEFAULT_TOPIC)
-        binding.etTopic.setText(topic)
-
         val isEnabled = prefs.getBoolean(MqttForegroundService.PREF_KEY_ENABLED, false)
         binding.switchService.isChecked = isEnabled
 
         if (isEnabled) {
-            updateStatusDisplay("Connecting to Broker...")
+            updateStatusDisplay("Connecting...")
             startForegroundListener()
         } else {
-            updateStatusDisplay("Service Inactive")
+            updateStatusDisplay("Inactive")
         }
     }
 
@@ -174,7 +148,7 @@ class MainActivity : AppCompatActivity() {
         } else {
             startService(intent)
         }
-        updateStatusDisplay("Starting service...")
+        updateStatusDisplay("Connecting...")
     }
 
     private fun stopForegroundListener() {
@@ -182,37 +156,35 @@ class MainActivity : AppCompatActivity() {
             action = MqttForegroundService.ACTION_STOP
         }
         startService(intent)
-        updateStatusDisplay("Service Inactive")
+        updateStatusDisplay("Inactive")
     }
 
     private fun updateStatusDisplay(status: String) {
         binding.tvLiveStatus.text = status
 
         if (status.contains("Connected", ignoreCase = true) || status.contains("Listening", ignoreCase = true)) {
-            binding.viewStatusDot.setBackgroundColor(Color.parseColor("#10B981")) // Emerald
-            binding.tvLiveStatus.setTextColor(Color.parseColor("#10B981"))
+            binding.viewStatusDot.setBackgroundColor(Color.parseColor("#4ADE80")) // M3 Success
+            binding.tvLiveStatus.setTextColor(Color.parseColor("#4ADE80"))
         } else if (status.contains("Connecting", ignoreCase = true) || status.contains("Starting", ignoreCase = true)) {
-            binding.viewStatusDot.setBackgroundColor(Color.parseColor("#06B6D4")) // Cyan
-            binding.tvLiveStatus.setTextColor(Color.parseColor("#06B6D4"))
+            binding.viewStatusDot.setBackgroundColor(Color.parseColor("#80D4FF")) // M3 Primary
+            binding.tvLiveStatus.setTextColor(Color.parseColor("#80D4FF"))
         } else {
-            binding.viewStatusDot.setBackgroundColor(Color.parseColor("#F43F5E")) // Rose
-            binding.tvLiveStatus.setTextColor(Color.parseColor("#F43F5E"))
+            binding.viewStatusDot.setBackgroundColor(Color.parseColor("#FFB4AB")) // M3 Error
+            binding.tvLiveStatus.setTextColor(Color.parseColor("#FFB4AB"))
         }
     }
 
     private fun updatePermissionButtonsState() {
-        // Check battery optimization
         val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
         val isIgnoringBattery = powerManager.isIgnoringBatteryOptimizations(packageName)
         if (isIgnoringBattery) {
-            binding.btnBatteryOpt.text = "✅ Battery Optimization: Exempt"
+            binding.btnBatteryOpt.text = "✅ Battery: Unrestricted"
             binding.btnBatteryOpt.isEnabled = false
         } else {
             binding.btnBatteryOpt.text = "🔋 Request Battery Exemption"
             binding.btnBatteryOpt.isEnabled = true
         }
 
-        // Check notification permission (Android 13+)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             val hasNotifPerm = ContextCompat.checkSelfPermission(
                 this,
@@ -220,10 +192,10 @@ class MainActivity : AppCompatActivity() {
             ) == PackageManager.PERMISSION_GRANTED
 
             if (hasNotifPerm) {
-                binding.btnNotificationPerm.text = "✅ Notification Permission: Granted"
+                binding.btnNotificationPerm.text = "✅ Notifications Active"
                 binding.btnNotificationPerm.isEnabled = false
             } else {
-                binding.btnNotificationPerm.text = "🔔 Grant Notification Permission"
+                binding.btnNotificationPerm.text = "🔔 Enable Notifications"
                 binding.btnNotificationPerm.isEnabled = true
             }
         } else {
@@ -242,12 +214,11 @@ class MainActivity : AppCompatActivity() {
                 }
                 startActivity(intent)
             } catch (e: Exception) {
-                // Fallback to battery optimization settings general screen
                 val intent = Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
                 startActivity(intent)
             }
         } else {
-            Toast.makeText(this, "App is already exempt from battery optimization!", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Already exempt from battery optimization", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -293,7 +264,7 @@ class MainActivity : AppCompatActivity() {
                 } catch (e: Exception) {}
             }, 600)
 
-            binding.tvEventLog.append("[Local Test] Beep & vibration tested OK\n")
+            binding.tvEventLog.append("[Local Test] Beep & vibration OK\n")
 
         } catch (e: Exception) {
             Toast.makeText(this, "Test error: ${e.message}", Toast.LENGTH_SHORT).show()
