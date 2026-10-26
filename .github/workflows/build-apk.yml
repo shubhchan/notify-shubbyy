@@ -66,45 +66,60 @@ jobs:
           path: ${{ env.APK_PATH }}
           retention-days: 14
 
-      - name: Warn if Telegram secrets are missing
-        if: ${{ env.TELEGRAM_TOKEN == '' || env.TELEGRAM_TO == '' }}
+      - name: Sanitize Telegram Credentials
         run: |
-          echo "::warning::Telegram secrets not set. APK is saved as a workflow artifact, but was NOT sent to Telegram. Add TELEGRAM_TOKEN (or TELEGRAM_BOT_TOKEN) and TELEGRAM_TO (or TELEGRAM_CHAT_ID) under GitHub repo Settings > Secrets and variables > Actions."
+          CLEAN_TOKEN=$(echo -n "${TELEGRAM_TOKEN}" | tr -d '\r\n ')
+          CLEAN_TO=$(echo -n "${TELEGRAM_TO}" | tr -d '\r\n ')
+          echo "TG_TOKEN=${CLEAN_TOKEN}" >> "$GITHUB_ENV"
+          echo "TG_TO=${CLEAN_TO}" >> "$GITHUB_ENV"
+
+      - name: Warn if Telegram secrets are missing
+        if: ${{ env.TG_TOKEN == '' || env.TG_TO == '' }}
+        run: |
+          echo "::warning::Telegram secrets not set. APK is saved as a workflow artifact, but was NOT sent to Telegram."
 
       - name: Send APK to Telegram Channel
         id: send_apk
-        if: ${{ env.TELEGRAM_TOKEN != '' && env.TELEGRAM_TO != '' && env.DIRECT_TG_UPLOAD == 'true' }}
-        continue-on-error: true
-        uses: appleboy/telegram-action@master
-        with:
-          to: ${{ env.TELEGRAM_TO }}
-          token: ${{ env.TELEGRAM_TOKEN }}
-          document: ${{ env.APK_PATH }}
-          format: markdown
-          message: |
-            🚀 *New Notify Shubbyy Release APK Ready!*
+        if: ${{ env.TG_TOKEN != '' && env.TG_TO != '' && env.DIRECT_TG_UPLOAD == 'true' }}
+        run: |
+          echo "Dispatching release APK to Telegram channel ${TG_TO}..."
+          CAPTION="🚀 *New Notify Shubbyy Release APK Ready!*
 
-            *Repository:* ${{ github.repository }}
-            *Branch:* ${{ github.ref_name }}
-            *Commit:* ${{ github.sha }}
-            *Pushed By:* ${{ github.actor }}
+*Repository:* ${{ github.repository }}
+*Branch:* ${{ github.ref_name }}
+*Commit:* ${{ github.sha }}
+*Pushed By:* ${{ github.actor }}
 
-            📱 Tap the attached Release APK file below to install directly on your phone!
+📱 Tap the attached Release APK file below to install directly on your phone!"
 
-      - name: Send Fallback Message to Telegram (if file was too large or direct upload failed)
-        if: ${{ env.TELEGRAM_TOKEN != '' && env.TELEGRAM_TO != '' && (env.DIRECT_TG_UPLOAD != 'true' || steps.send_apk.outcome == 'failure') }}
-        uses: appleboy/telegram-action@master
-        with:
-          to: ${{ env.TELEGRAM_TO }}
-          token: ${{ env.TELEGRAM_TOKEN }}
-          format: markdown
-          message: |
-            🚀 *New Notify Shubbyy Release APK Successful!*
+          RESPONSE=$(curl -s -S -X POST "https://api.telegram.org/bot${TG_TOKEN}/sendDocument" \
+            -F chat_id="${TG_TO}" \
+            -F document=@"${APK_PATH}" \
+            -F parse_mode="Markdown" \
+            -F caption="${CAPTION}")
 
-            *Repository:* ${{ github.repository }}
-            *Branch:* ${{ github.ref_name }}
-            *Commit:* ${{ github.sha }}
-            *Pushed By:* ${{ github.actor }}
+          echo "Telegram Response: $RESPONSE"
+          if echo "$RESPONSE" | grep -q '"ok":true'; then
+            echo "Uploaded to Telegram successfully!"
+            echo "UPLOAD_SUCCESS=true" >> "$GITHUB_ENV"
+          else
+            echo "Upload to Telegram failed!"
+            echo "UPLOAD_SUCCESS=false" >> "$GITHUB_ENV"
+          fi
 
-            📦 *Download APK:*
-            [Download Workflow Artifact](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+      - name: Send Fallback Message to Telegram (if direct upload failed or file was too large)
+        if: ${{ env.TG_TOKEN != '' && env.TG_TO != '' && (env.DIRECT_TG_UPLOAD != 'true' || env.UPLOAD_SUCCESS != 'true') }}
+        run: |
+          TEXT="🚀 *New Notify Shubbyy Release APK Successful!*
+
+*Repository:* ${{ github.repository }}
+*Branch:* ${{ github.ref_name }}
+*Commit:* ${{ github.sha }}
+*Pushed By:* ${{ github.actor }}
+
+📦 [Download Workflow Artifact](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})"
+
+          curl -s -S -X POST "https://api.telegram.org/bot${TG_TOKEN}/sendMessage" \
+            -F chat_id="${TG_TO}" \
+            -F parse_mode="Markdown" \
+            -F text="${TEXT}"
