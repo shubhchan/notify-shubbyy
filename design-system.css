@@ -339,7 +339,10 @@ svg {
   transition:
     transform var(--dur-fast) var(--ease-step),
     box-shadow var(--dur-fast) var(--ease-step),
-    filter var(--dur-fast) linear;
+    filter var(--dur-fast) linear,
+    color var(--dur-fast) linear,
+    background-color var(--dur-fast) linear,
+    border-color var(--dur-fast) linear;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
 }
@@ -446,6 +449,10 @@ svg {
   text-transform: uppercase;
   box-shadow: var(--shadow-hard-sm);
   white-space: nowrap;
+  transition:
+    color var(--dur-med) var(--ease-step),
+    background-color var(--dur-med) var(--ease-step),
+    border-color var(--dur-med) var(--ease-step);
 }
 
 .px-chip--ok { color: var(--ok); border-color: var(--neon-green-dim); }

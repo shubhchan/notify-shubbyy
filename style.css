@@ -3,11 +3,37 @@
    Built on the Pixel Signal design system (design-system.css).
    ========================================================================== */
 
+@property --mode {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #39ff88;
+}
+
+@property --mode-dark {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #0b7a41;
+}
+
+@property --mode-glow {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: rgba(57, 255, 136, 0.38);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
 /* Mode-driven color state */
 body {
   --mode: var(--neon-green);
   --mode-dark: #0b7a41;
   --mode-glow: rgba(57, 255, 136, 0.38);
+  transition:
+    --mode var(--dur-med) linear,
+    --mode-dark var(--dur-med) linear,
+    --mode-glow var(--dur-med) linear;
 }
 
 body[data-mode='beep'] {
@@ -43,7 +69,7 @@ body.crt {
 
 .starfield {
   position: fixed;
-  inset: 0;
+  inset: -48px;
   z-index: 0;
   pointer-events: none;
   opacity: 0.85;
@@ -57,12 +83,13 @@ body.crt {
     radial-gradient(1px 1px at 66% 82%, rgba(62, 230, 255, 0.45), transparent);
   background-size: 260px 260px, 320px 320px, 210px 210px, 380px 380px, 300px 300px, 240px 240px, 340px 340px;
   background-position: 0 0, 40px 80px, 120px 30px, 200px 140px, 90px 190px, 10px 120px, 160px 210px;
-  animation: star-drift 90s linear infinite;
+  animation: star-drift 120s ease-in-out infinite alternate;
+  will-change: transform;
 }
 
 @keyframes star-drift {
-  from { background-position: 0 0, 40px 80px, 120px 30px, 200px 140px, 90px 190px, 10px 120px, 160px 210px; }
-  to { background-position: 260px 260px, 360px 400px, 330px 240px, 580px 520px, 390px 490px, 250px 360px, 500px 550px; }
+  from { transform: translate3d(0, 0, 0); }
+  to { transform: translate3d(-48px, -32px, 0); }
 }
 
 /* Scanlines + vignette */
@@ -85,6 +112,7 @@ body.crt {
 .crt-fx::after {
   content: '';
   position: absolute;
+  top: -20%;
   left: 0;
   right: 0;
   height: 140px;
@@ -95,6 +123,7 @@ body.crt {
     transparent
   );
   animation: crt-scan 7s linear infinite;
+  will-change: transform;
 }
 
 @keyframes crt-flicker {
@@ -105,8 +134,8 @@ body.crt {
 }
 
 @keyframes crt-scan {
-  from { top: -20%; }
-  to { top: 110%; }
+  from { transform: translate3d(0, 0, 0); }
+  to { transform: translate3d(0, 130vh, 0); }
 }
 
 /* --------------------------------------------------------------------------
@@ -122,6 +151,12 @@ body.crt {
   display: flex;
   flex-direction: column;
   gap: var(--sp-5);
+  animation: cabinet-in 420ms var(--ease-out) both;
+}
+
+@keyframes cabinet-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .skip-link {
@@ -290,7 +325,9 @@ body.crt {
     radial-gradient(circle at 50% 40%, var(--mode-glow), transparent 52%),
     linear-gradient(180deg, rgba(255, 255, 255, 0.035), transparent 42%);
   background-color: var(--surface);
-  transition: background-image var(--dur-med) linear;
+  transition:
+    border-color var(--dur-med) var(--ease-step),
+    box-shadow var(--dur-med) var(--ease-step);
 }
 
 .stage::before {
